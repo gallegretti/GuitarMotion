@@ -91,7 +91,6 @@ def ReleaseKey(hexKeyCode):
 
 
 # Commands that can be sent to the server
-
 COMMAND_JOLT_UP       = 0x0001
 COMMAND_JOLT_DOWN     = 0x0002
 COMMAND_NECK_UP       = 0x0003
@@ -117,9 +116,9 @@ class HostBluetoothServer(object):
         self.serverSocket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
         self.port = bluetooth.PORT_ANY
         self.serverSocket.bind(("",port))
-    
-	# Wait for a device to send a command and returns it
-    def waitForNewCommand():
+	
+    def WaitForNewCommand():
+        # Wait for a device to send a command and returns it
         print ("HostBluetoothServer: Listening for connections on port: ", port)
         serverSocket.listen(1)
         port=serverSocket.getsockname()[1]
@@ -135,60 +134,70 @@ class HostBluetoothServer(object):
         data = inputSocket.recv(1024)
         print ("HostBluetoothServer: received [%s] \n " % data)
         inputSocket.close()
-        return COMMAND_JOLT_UP # TEMP
+        return COMMAND_JOLT_UP # TEMP!!!!
 		
-    # TODO: Native destructor?
-    def exit():
+    def Close():
         self.serverSocket.close() 
 
 
-# Each tone is a state in the FSM, and the commands are the transitions
-class RockSmithTone(object):
-    def __init__(self, name):
-        # By default, no command will change the tone
-        this.name = name
+# Each state in the FSM. Has a tone and the the transitions are COMMANDS
+class RockSmithState(object):
+    def __init__(self, name, tone):
+        # By default, no command will change the state
+        self.name = name
+        self.tone = tone
         self.transitions = { COMMAND_JOLT_UP : self, COMMAND_JOLT_DOWN : self, COMMAND_NECK_UP : self, COMMAND_NECK_STRAIGHT : self , COMMAND_NECK_DOWN : self } # TODO: Iterate over all commands and set to self
 		
     # When in this tone, given the command, the next tone should be the one given
-    def setToneOnCommand(tone, command):
+    def SetStateOnCommand(self, tone, command):
         self.transitions[command] = tone
 		
     # Given a command, returns the next tone
-    def getToneOnCommand(command):	
+    def GetStateOnCommand(self, command):	
         return self.transitions[command]
+    
+    # Which tone should be used in this state
+    def SetTone(self, tone):
+        self.tone = tone
+
+    # Which tone is being used in this state
+    def GetTone(self):
+        return self.tone
 
 
 # Contains every tone in the FSM, as well as 
 class RockSmithManager(object):
     def __init__(self):
-        # This array holds all the tones
-        self.tones = [ RockSmithTone("default_tone"+i) for i in range(len(TONE))]
-        self.current_tone = self.tones[0]
+        # Simple using COMMAND_JOLT_UP to toggle between Clean and Overdrive
+        # TODO: Make non-hardcoded
+        self.states[0] = RockSmithState("Clean", TONE[0])
+        self.states[1] = RockSmithState("Overdrive", TONE[1])
+        self.states[0].SetStateOnCommand(self.states[1], COMMAND_JOLT_UP)
+        self.states[1].SetStateOnCommand(self.states[0], COMMAND_JOLT_UP)
+        self.current_state = self.states[0]
+        self.SetTone(self.current_state.GetTone())
 		
-    def isGameRunning():
+    def IsGameRunning():
         # TODO: Detect if game is running
         return True
 		
     # Given a command, update the in-game tone
-    def updateTone(command):
-        print("RockSmithManager: Changing from " + self.current_tone.name + " to " + self.current_tone.getToneOnCommand(command).name)
-        self.current_tone = self.current_tone.getToneOnCommand(command)
-        PressKey(TONE[self.current_tone])
-		
-    # TODO: This should not be hardcoded. It's just for testing
-    def EnterSandman():
-        # Simple using COMMAND_JOLT_UP to toggle between tones 0 and 1
-        self.tones[0].setToneOnCommand(self.tones[1], COMMAND_JOLT_UP)
-        self.tones[1].setToneOnCommand(self.tones[0], COMMAND_JOLT_UP)
+    def UpdateState(command):
+        new_state = self.current_state.GetStateOnCommand(command)
+        if new_state != self.current_state:
+            print("RockSmithManager: Changing from " + self.current_state.name + " to " + self.current_state.GetToneOnCommand(command).name)
+            self.current_state = new_state
+            self.SetTone(self.current_state.GetTone())
+
+    def SetTone(tone):
+        PressKey(TONE_TO_KEY[tone])
     
 
-
-bt_server = HostBluetoothServer()
-rocksmith_manager = RockSmithManager()
-rocksmith_manager.EnterSandman()
-while (rocksmith_manager.isGameRunning()):
-    command = bt_server.waitForNewCommand()
-    rocksmith_manager.updateTone(command)
-
-bt_server.exit()
+if __name__ == "__main__":
+    bt_server = HostBluetoothServer()
+    rocksmith_manager = RockSmithManager()
+    while (rocksmith_manager.IsGameRunning()):
+        command = bt_server.WaitForNewCommand()
+        rocksmith_manager.UpdateState(command)
+    bt_server.Close()
 	
