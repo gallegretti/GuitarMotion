@@ -164,33 +164,38 @@ class RockSmithState(object):
     def GetTone(self):
         return self.tone
 
-
-# Contains every tone in the FSM, as well as 
-class RockSmithManager(object):
+#  
+class RockSmithFSM(object):
     def __init__(self):
-        # Simple using COMMAND_JOLT_UP to toggle between Clean and Overdrive
         # TODO: Make non-hardcoded
+        self.states = []
         self.states[0] = RockSmithState("Clean", TONE[0])
         self.states[1] = RockSmithState("Overdrive", TONE[1])
         self.states[0].SetStateOnCommand(self.states[1], COMMAND_JOLT_UP)
         self.states[1].SetStateOnCommand(self.states[0], COMMAND_JOLT_UP)
         self.current_state = self.states[0]
         self.SetTone(self.current_state.GetTone())
-		
-    def IsGameRunning():
-        # TODO: Detect if game is running
-        return True
-		
-    # Given a command, update the in-game tone
-    def UpdateState(command):
+
+    def Command(self, command):
         new_state = self.current_state.GetStateOnCommand(command)
         if new_state != self.current_state:
-            print("RockSmithManager: Changing from " + self.current_state.name + " to " + self.current_state.GetToneOnCommand(command).name)
+            print("RockSmithFSM: Changing from " + self.current_state.name + " to " + self.current_state.new_state.name)
             self.current_state = new_state
-            self.SetTone(self.current_state.GetTone())
+            PressKey(TONE_TO_KEY[self.current_state.GetTone()])
 
-    def SetTone(tone):
-        PressKey(TONE_TO_KEY[tone])
+            
+class RockSmithManager(object):
+    def __init__(self):
+        # Simple using COMMAND_JOLT_UP to toggle between Clean and Overdrive
+        self.fsm = RockSmithFSM()
+		
+    def IsGameRunning(self):
+        # TODO: Detect if the game is running
+        return True
+
+    def Command(self, command):
+        self.fsm.Command(command)
+		
     
 
 if __name__ == "__main__":
