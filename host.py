@@ -152,7 +152,7 @@ class RockSmithState(object):
         self.tone = tone
         self.transitions = {}
         # By default, no command will change the state
-        for i in range (1, COMMANDS + 1):
+        for i in range (0, COMMANDS + 1):
             self.transitions[i] = self
 		
     # Set the transaction for this state
