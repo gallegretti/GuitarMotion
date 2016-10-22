@@ -91,12 +91,12 @@ def ReleaseKey(hexKeyCode):
 
 
 # Commands that can be sent to the server
-COMMAND_NULL          = 0x0000
-COMMAND_JOLT_UP       = 0x0001
-COMMAND_JOLT_DOWN     = 0x0002
-COMMAND_NECK_UP       = 0x0003
-COMMAND_NECK_STRAIGHT = 0x0004
-COMMAND_NECK_DOWN     = 0x0005
+COMMAND_NULL          = 0x00
+COMMAND_JOLT_UP       = 0x01
+COMMAND_JOLT_DOWN     = 0x02
+COMMAND_NECK_UP       = 0x03
+COMMAND_NECK_STRAIGHT = 0x04
+COMMAND_NECK_DOWN     = 0x05
 COMMANDS = 5
 # The key bindings that change the tone in-game.
 # Should be mapped to hexadecimal using this table: https://msdn.microsoft.com/en-us/library/dd375731
@@ -124,32 +124,16 @@ class HostBluetoothServer(object):
                                    )
         print ("HostBluetoothServer: Waiting connection on RFCOMM channel {}".format(port))
 
-        client_sock, client_info = self.server_socket.accept()
+        self.client_sock, client_info = self.server_socket.accept()
 
         print ("HostBluetoothServer: Accepted connection from {}".format(client_info))
         
 
     # Wait for a device to send a command and returns it
     def WaitForNewCommand(self):
-        '''
-        print ("HostBluetoothServer: Listening for connections on port: ", port)
-        serverSocket.listen(1)
-        port=serverSocket.getsockname()[1]
-    
-        bluetooth.advertise_service( serverSocket, "SampleServer",
-                           service_id = self.uuid,
-                           service_classes = [ self.uuid, bluetooth.SERIAL_PORT_CLASS ],
-                           profiles = [ bluetooth.SERIAL_PORT_PROFILE ] 
-                           )
-    
-        inputSocket, address=serverSocket.accept()
-        print ("HostBluetoothServer: Got connection with" , address)
-        data = inputSocket.recv(1024)
-        print ("HostBluetoothServer: received [%s] \n " % data)
-        inputSocket.close()
-        '''
-        time.sleep(3)
-        return COMMAND_JOLT_UP # TEMP!!!!
+        data = self.client_sock.recv(1024)
+        print("received [%s]" % data)
+        return int(bytes(data)[0])
 		
     def Close():
         self.serverSocket.close() 
@@ -159,10 +143,10 @@ class RockSmithState(object):
     def __init__(self, name="Unknown", tone=TONE[0]):
         self.name = name
         self.tone = tone
-        self.transitions = {}
+        self.transitions = []
         # By default, no command will change the state
         for i in range (0, COMMANDS + 1):
-            self.transitions[i] = self
+            self.transitions.append(self)
 		
     # Set the transaction for this state
     def SetStateOnCommand(self, state, command):

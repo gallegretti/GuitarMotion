@@ -13,6 +13,7 @@ import android.bluetooth.*;
 import android.util.Log;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Set;
 import java.util.UUID;
 
@@ -21,6 +22,15 @@ public class MainActivity extends AppCompatActivity {
     private final static int REQUEST_ENABLE_BT = 1;
     private BluetoothDevice host;
     private UUID uuid = UUID.fromString("5E66F20D-7079-472C-B8C3-97221B7C67F7");
+    private OutputStream output_stream;
+
+    private final byte COMMAND_NONE          = 0x00;
+    private final byte COMMAND_JOLT_UP       = 0x01;
+    private final byte COMMAND_JOLT_DOWN     = 0x02;
+    private final byte COMMAND_NECK_UP       = 0x03;
+    private final byte COMMAND_NECK_STRAIGHT = 0x04;
+    private final byte COMMAND_NECK_DOWN     = 0x05;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,8 +43,12 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                try {
+                    output_stream.write(COMMAND_JOLT_UP);
+                }
+                catch (IOException e) {
+                    Log.d("Bluetooth", "Teste nao foi enviado");
+                }
             }
         });
 
@@ -105,6 +119,12 @@ public class MainActivity extends AppCompatActivity {
             Log.d("Bluetooth", "Socket nao conectado");
         }
 
+        try {
+            output_stream = btsocket.getOutputStream();
+        }
+        catch (IOException e) {
+            Log.d("Bluetooth", "Stream de output nao foi criada");
+        }
 
     }
 
