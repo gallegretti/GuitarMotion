@@ -10,10 +10,18 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.bluetooth.*;
+import android.util.Log;
+
+import java.io.IOException;
+import java.util.Set;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
     private final static int REQUEST_ENABLE_BT = 1;
+    private BluetoothDevice host;
+    private UUID uuid = UUID.fromString("5E66F20D-7079-472C-B8C3-97221B7C67F7");
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
 
         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null) {
-            // Device does not support Bluetooth
+            Log.e("Bluetooth", "Bluetooth nao eh suportado");
         }
 
         if (!mBluetoothAdapter.isEnabled()) {
@@ -40,6 +48,39 @@ public class MainActivity extends AppCompatActivity {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
+
+        if (!mBluetoothAdapter.isEnabled()) {
+            Log.e("Bluetooth", "Bluetooth nao foi ativado");
+        }
+
+        // FIXME: 10/22/2016
+        // For now, assume that the host and this device are paired
+
+
+        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+        // If there are paired devices
+        if (pairedDevices.size() > 0) {
+            for (BluetoothDevice device : pairedDevices) {
+                // FIXME: 10/22/2016
+                // For now, assume that the first device paired is the host
+                host = device;
+                break;
+            }
+        }
+        else {
+            Log.e("Bluetooth", "Nao ha dispositivos pareados");
+        }
+
+        // Now that we know the host, connect to it
+        BluetoothSocket tmp = null;
+        try {
+            tmp = host.createRfcommSocketToServiceRecord(uuid);
+        }
+        catch (IOException e) {
+            Log.e("Bluetooth", "Nao foi possivel criar o socket");
+        }
+        Log.d("Bluetooth",tmp.toString());
+
     }
 
     @Override
