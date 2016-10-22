@@ -40,17 +40,21 @@ public class MainActivity extends AppCompatActivity {
 
         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null) {
-            Log.e("Bluetooth", "Bluetooth nao eh suportado");
+            Log.d("Bluetooth", "Bluetooth nao eh suportado");
+        }
+        else {
+            Log.d("Bluetooth", "Bluetooth suportado");
         }
 
         if (!mBluetoothAdapter.isEnabled()) {
             // Bluetooth not active, ask the user to turn it on
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            Log.d("Bluetooth", "Bluetooth ativado");
         }
 
         if (!mBluetoothAdapter.isEnabled()) {
-            Log.e("Bluetooth", "Bluetooth nao foi ativado");
+            Log.d("Bluetooth", "Bluetooth nao ativado");
         }
 
         // FIXME: 10/22/2016
@@ -64,22 +68,43 @@ public class MainActivity extends AppCompatActivity {
                 // FIXME: 10/22/2016
                 // For now, assume that the first device paired is the host
                 host = device;
+                Log.d("Bluetooth", "Host selecionado: " + host.getName());
                 break;
             }
         }
         else {
-            Log.e("Bluetooth", "Nao ha dispositivos pareados");
+            Log.d("Bluetooth", "Host nao selecionado");
         }
 
-        // Now that we know the host, connect to it
-        BluetoothSocket tmp = null;
+        // Now that we know the host, create the socket
+        BluetoothSocket btsocket = null;
         try {
-            tmp = host.createRfcommSocketToServiceRecord(uuid);
+            btsocket = host.createRfcommSocketToServiceRecord(uuid);
         }
         catch (IOException e) {
-            Log.e("Bluetooth", "Nao foi possivel criar o socket");
+            Log.d("Bluetooth", "Nao foi possivel criar o socket");
         }
-        Log.d("Bluetooth",tmp.toString());
+
+        // And try to connect it
+        try {
+            // Connect the device through the socket. This will block
+            // until it succeeds or throws an exception
+            Log.d("Bluetooth", "Tentando conectar o socket");
+            btsocket.connect();
+        } catch (IOException connectException) {
+            // Unable to connect; close the socket and get out
+            try {
+                Log.d("Bluetooth", "Nao foi possivel conectar o socket");
+                btsocket.close();
+            } catch (IOException closeException) { }
+        }
+        if (btsocket.isConnected()) {
+            Log.d("Bluetooth","Socket conectado");
+        }
+        else {
+            Log.d("Bluetooth", "Socket nao conectado");
+        }
+
 
     }
 
