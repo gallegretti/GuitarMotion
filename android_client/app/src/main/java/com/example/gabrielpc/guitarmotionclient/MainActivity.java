@@ -1,6 +1,10 @@
 package com.example.gabrielpc.guitarmotionclient;
 
 import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -19,11 +23,17 @@ import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
+    // Bluetooth stuff
     private final static int REQUEST_ENABLE_BT = 1;
     private BluetoothDevice host;
     private UUID uuid = UUID.fromString("5E66F20D-7079-472C-B8C3-97221B7C67F7");
     private OutputStream output_stream;
 
+    // Sensors stuff
+    private SensorManager mSensorManager;
+    private Sensor mSensor;
+
+    // Possible commands we can send to the host
     private final byte COMMAND_NONE          = 0x00;
     private final byte COMMAND_JOLT_UP       = 0x01;
     private final byte COMMAND_JOLT_DOWN     = 0x02;
@@ -125,6 +135,37 @@ public class MainActivity extends AppCompatActivity {
         catch (IOException e) {
             Log.d("Bluetooth", "Stream de output nao foi criada");
         }
+
+
+        // Setup sensors
+
+        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+
+        mSensorManager.registerListener(new SensorEventListener() {
+            @Override
+            public void onSensorChanged(SensorEvent event) {
+                // Read values
+                float x = event.values[0];
+                float y = event.values[1];
+                float z = event.values[2];
+
+                double total = Math.sqrt(x * x + y * y + z * z);
+                if (total > 30) {
+                    try {
+                        output_stream.write(COMMAND_JOLT_UP);
+                    }
+                    catch (IOException e) {
+                        Log.d("Bluetooth", "Teste nao foi enviado");
+                    }
+                }
+            }
+
+            @Override
+            public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+            }
+        }, mSensor, SensorManager.SENSOR_DELAY_FASTEST);
 
     }
 

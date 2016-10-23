@@ -131,8 +131,10 @@ class HostBluetoothServer(object):
 
     # Wait for a device to send a command and returns it
     def WaitForNewCommand(self):
+        # Clean buffer
         data = self.client_sock.recv(1024)
-        print("received [%s]" % data)
+        # Read next command
+        data = self.client_sock.recv(1024)
         return int(bytes(data)[0])
 		
     def Close():
@@ -206,5 +208,6 @@ if __name__ == "__main__":
     while (rocksmith_manager.IsGameRunning()):
         command = bt_server.WaitForNewCommand()
         rocksmith_manager.Command(command)
+        time.sleep(1)
     bt_server.Close()
 	
