@@ -97,7 +97,7 @@ COMMAND_JOLT_DOWN     = 0x02
 COMMAND_NECK_UP       = 0x03
 COMMAND_NECK_STRAIGHT = 0x04
 COMMAND_NECK_DOWN     = 0x05
-COMMANDS = 5
+COMMANDS = 6
 # The key bindings that change the tone in-game.
 # Should be mapped to hexadecimal using this table: https://msdn.microsoft.com/en-us/library/dd375731
 TONE = []
@@ -130,7 +130,7 @@ class HostBluetoothServer(object):
         
 
     # Wait for a device to send a command and returns it
-    def WaitForNewCommand(self):
+    def ReadCommand(self):
         # Clean buffer
         data = self.client_sock.recv(1024)
         # Read next command
@@ -147,7 +147,7 @@ class RockSmithState(object):
         self.tone = tone
         self.transitions = []
         # By default, no command will change the state
-        for i in range (0, COMMANDS + 1):
+        for i in range (0, COMMANDS):
             self.transitions.append(self)
 		
     # Set the transaction for this state
@@ -185,9 +185,9 @@ class RockSmithFSM(object):
     def Command(self, command):
         new_state = self.current_state.GetStateOnCommand(command)
         if new_state != self.current_state:
+            PressKey(self.new_state.GetTone())
             print("RockSmithFSM: Changing from " + self.current_state.name + " to " + new_state.name)
             self.current_state = new_state
-            PressKey(self.current_state.GetTone())
 
             
 class RockSmithManager(object):
@@ -206,7 +206,7 @@ if __name__ == "__main__":
     bt_server = HostBluetoothServer()
     rocksmith_manager = RockSmithManager()
     while (rocksmith_manager.IsGameRunning()):
-        command = bt_server.WaitForNewCommand()
+        command = bt_server.ReadCommand()
         rocksmith_manager.Command(command)
         time.sleep(1)
     bt_server.Close()
