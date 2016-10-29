@@ -140,23 +140,33 @@ public class MainActivity extends AppCompatActivity {
         // Setup sensors
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
 
         mSensorManager.registerListener(new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent event) {
                 // Read values
-                float x = event.values[0];
-                float y = event.values[1];
+                //float x = event.values[0];
+                //float y = event.values[1];
                 float z = event.values[2];
 
-                double total = Math.sqrt(x * x + y * y + z * z);
-                if (total > 30) {
+                // COMMAND_JOLT_UP
+                if (z > 10) {
                     try {
                         output_stream.write(COMMAND_JOLT_UP);
                     }
                     catch (IOException e) {
-                        Log.d("Bluetooth", "Teste nao foi enviado");
+                        Log.d("Bluetooth", "Comando JOLT_UP nao foi enviado");
+                    }
+                }
+
+                // COMMAND_JOLT_DOWN
+                else if (z < -10) {
+                    try {
+                        output_stream.write(COMMAND_JOLT_DOWN);
+                    }
+                    catch (IOException e) {
+                        Log.d("Bluetooth", "Comando JOLT_DOWN nao foi enviado");
                     }
                 }
             }

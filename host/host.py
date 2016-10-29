@@ -91,7 +91,7 @@ def ReleaseKey(hexKeyCode):
 
 
 # Commands that can be sent to the server
-COMMAND_NULL          = 0x00
+COMMAND_NONE          = 0x00
 COMMAND_JOLT_UP       = 0x01
 COMMAND_JOLT_DOWN     = 0x02
 COMMAND_NECK_UP       = 0x03
@@ -100,7 +100,7 @@ COMMAND_NECK_DOWN     = 0x05
 COMMANDS = 6
 
 COMMAND_STRING = {
-    COMMAND_NULL          : "COMMAND_NULL",
+    COMMAND_NONE          : "COMMAND_NULL",
     COMMAND_JOLT_UP       : "COMMAND_JOLT_UP",
     COMMAND_JOLT_DOWN     : "COMMAND_JOLT_DOWN",
     COMMAND_NECK_UP       : "COMMAND_NECK_UP",
@@ -142,12 +142,15 @@ class HostBluetoothServer(object):
     # Wait for a device to send a command and returns it
     def ReadCommand(self):
         # Clean buffer
-        data = self.client_sock.recv(1024)
+        data = self.client_sock.recv(1024 * 4)
+        #print("len de data eh {}".format(len(data)))
         # Read next command
         data = self.client_sock.recv(1024)
-
-        command = int(bytes(data)[0])
-
+        if len(data) > 0:
+            command = int(bytes(data)[len(data)-1])
+        else:
+            command = COMMAND_NONE
+            
         return command
 		
     def Close():
@@ -198,7 +201,7 @@ class RockSmithFSM(object):
     def Command(self, command):
         new_state = self.current_state.GetStateOnCommand(command)
         if new_state != self.current_state:
-            PressKey(self.new_state.GetTone())
+            PressKey(new_state.GetTone())
             print("RockSmithFSM: Changing from " + self.current_state.name + " to " + new_state.name)
             self.current_state = new_state
         print("Recived command: {}".format(COMMAND_STRING[command]))
@@ -222,6 +225,6 @@ if __name__ == "__main__":
     while (rocksmith_manager.IsGameRunning()):
         command = bt_server.ReadCommand()
         rocksmith_manager.Command(command)
-        time.sleep(1)
+        time.sleep(2)
     bt_server.Close()
 	
