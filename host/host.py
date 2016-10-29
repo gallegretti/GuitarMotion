@@ -98,6 +98,16 @@ COMMAND_NECK_UP       = 0x03
 COMMAND_NECK_STRAIGHT = 0x04
 COMMAND_NECK_DOWN     = 0x05
 COMMANDS = 6
+
+COMMAND_STRING = {
+    COMMAND_NULL          : "COMMAND_NULL",
+    COMMAND_JOLT_UP       : "COMMAND_JOLT_UP",
+    COMMAND_JOLT_DOWN     : "COMMAND_JOLT_DOWN",
+    COMMAND_NECK_UP       : "COMMAND_NECK_UP",
+    COMMAND_NECK_STRAIGHT : "COMMAND_NECK_STRAIGHT",
+    COMMAND_NECK_DOWN     : "COMMAND_NECK_DOWN"
+}
+
 # The key bindings that change the tone in-game.
 # Should be mapped to hexadecimal using this table: https://msdn.microsoft.com/en-us/library/dd375731
 TONE = []
@@ -135,7 +145,10 @@ class HostBluetoothServer(object):
         data = self.client_sock.recv(1024)
         # Read next command
         data = self.client_sock.recv(1024)
-        return int(bytes(data)[0])
+
+        command = int(bytes(data)[0])
+
+        return command
 		
     def Close():
         self.serverSocket.close() 
@@ -188,6 +201,7 @@ class RockSmithFSM(object):
             PressKey(self.new_state.GetTone())
             print("RockSmithFSM: Changing from " + self.current_state.name + " to " + new_state.name)
             self.current_state = new_state
+        print("Recived command: {}".format(COMMAND_STRING[command]))
 
             
 class RockSmithManager(object):
