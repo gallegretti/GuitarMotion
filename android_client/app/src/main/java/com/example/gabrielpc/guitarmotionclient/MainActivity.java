@@ -6,11 +6,8 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.bluetooth.*;
@@ -33,6 +30,10 @@ public class MainActivity extends AppCompatActivity {
     private SensorManager mSensorManager;
     private Sensor mSensor;
 
+    // Timing
+    private long commandInvervalMillis = 2000;
+    private long lastCommandSent = System.currentTimeMillis() - commandInvervalMillis;
+
     // Possible commands we can send to the host
     private final byte COMMAND_NONE          = 0x00;
     private final byte COMMAND_JOLT_UP       = 0x01;
@@ -49,18 +50,6 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                try {
-                    output_stream.write(COMMAND_JOLT_UP);
-                }
-                catch (IOException e) {
-                    Log.d("Bluetooth", "Teste nao foi enviado");
-                }
-            }
-        });
 
         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null) {
@@ -145,6 +134,10 @@ public class MainActivity extends AppCompatActivity {
         mSensorManager.registerListener(new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent event) {
+                long currentTimeMillis = System.currentTimeMillis();
+                if (lastCommandSent + commandInvervalMillis > currentTimeMillis) {
+                    return;
+                }
                 // Read values
                 //float x = event.values[0];
                 //float y = event.values[1];
@@ -154,6 +147,7 @@ public class MainActivity extends AppCompatActivity {
                 if (z > 10) {
                     try {
                         output_stream.write(COMMAND_JOLT_UP);
+                        lastCommandSent = currentTimeMillis;
                     }
                     catch (IOException e) {
                         Log.d("Bluetooth", "Comando JOLT_UP nao foi enviado");
@@ -164,6 +158,7 @@ public class MainActivity extends AppCompatActivity {
                 else if (z < -10) {
                     try {
                         output_stream.write(COMMAND_JOLT_DOWN);
+                        lastCommandSent = currentTimeMillis;
                     }
                     catch (IOException e) {
                         Log.d("Bluetooth", "Comando JOLT_DOWN nao foi enviado");

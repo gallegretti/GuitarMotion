@@ -141,11 +141,7 @@ class HostBluetoothServer(object):
 
     # Wait for a device to send a command and returns it
     def ReadCommand(self):
-        # Clean buffer
-        data = self.client_sock.recv(1024 * 4)
-        #print("len de data eh {}".format(len(data)))
-        # Read next command
-        data = self.client_sock.recv(1024)
+        data = self.client_sock.recv(1)
         if len(data) > 0:
             command = int(bytes(data)[len(data)-1])
         else:
@@ -225,6 +221,5 @@ if __name__ == "__main__":
     while (rocksmith_manager.IsGameRunning()):
         command = bt_server.ReadCommand()
         rocksmith_manager.Command(command)
-        time.sleep(2)
     bt_server.Close()
 	
