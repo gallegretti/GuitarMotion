@@ -1,5 +1,13 @@
 # GuitarMotion
-Para disciplina de IHC
+
+Alunos:  
+* Gabriel Allegretti   
+* Carlos Francisco Pinheiro    
+
+Professor:
+* Anderson Maciel    
+
+### Dados comuns entre os projetos:
 
 Comandos
 ```
