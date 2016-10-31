@@ -51,7 +51,7 @@ class HostBluetoothServer(object):
 
             print ("HostBluetoothServer: Accepted connection from {}".format(client_info))
         except:
-            print ("Não foi possivel inicializar o servidor bluetooth")
+            print ("HostBluetoothServer: Failed to initialize")
         
 
     # Wait for a device to send a command and returns it
