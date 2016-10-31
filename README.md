@@ -7,6 +7,26 @@ Alunos:
 Professor:
 * Anderson Maciel    
 
+## \HOST
+
+Características:
+* Roda em windows + python 3.x
+
+Responsável por:
+* Conectar com clientes
+* Receber comandos dos clientes
+* Decidir a mudança de tom
+
+## \ANDROID_CLIENT
+
+Características:
+* Roda em android
+
+Resposável por:
+* Conectar com um host
+* Detectar movimentos pré-definidos e associar ao comando correspondente
+* Enviar o comando ao host
+
 ### Dados comuns entre os projetos:
 
 Comandos
